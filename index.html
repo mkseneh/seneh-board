@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>Seneh Life Event Board</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <style>
+  <style>
     * {
       box-sizing: border-box;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -138,16 +138,15 @@
       width: 18%;
     }
 
-   .col-countdown {
-  width: 18%;
-  font-weight: 900;
-  font-size: 20px;
-  text-align: right;
-  letter-spacing: 0.03em;
-  color: #fefce8; /* soft warm airport-yellow */
-  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-}
-
+    .col-countdown {
+      width: 18%;
+      font-weight: 900;
+      font-size: 22px;
+      text-align: right;
+      letter-spacing: 0.03em;
+      color: #fefce8;
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
 
     .col-status {
       width: 12%;
@@ -228,6 +227,19 @@
     .priority-medium { background: #22c55e; }
     .priority-low { background: #6b7280; }
 
+    /* urgency colours for countdown */
+    .countdown-soon {
+      color: #fde047; /* < 1 hour */
+    }
+    .countdown-urgent {
+      color: #fb923c; /* < 10 minutes */
+      text-shadow: 0 0 6px rgba(251,146,60,0.8);
+    }
+    .countdown-critical {
+      color: #f87171; /* < 1 minute */
+      text-shadow: 0 0 10px rgba(248,113,113,0.9);
+    }
+
     .footer-bar {
       font-size: 10px;
       padding: 6px 10px;
@@ -287,31 +299,11 @@
       .board-subtitle {
         font-size: 11px;
       }
+      .col-countdown {
+        font-size: 16px;
+      }
     }
-
-        /* Under 1 hour = yellow */
-.countdown-soon {
-  color: #fde047; /* bright warm yellow */
-  font-weight: 900;
-}
-
-/* Under 10 minutes = orange */
-.countdown-urgent {
-  color: #fb923c;
-  font-weight: 900;
-  text-shadow: 0 0 8px rgba(251, 146, 60, 0.8);
-}
-
-/* Under 1 minute = red + glow */
-.countdown-critical {
-  color: #f87171;
-  font-weight: 900;
-  text-shadow: 0 0 12px rgba(248, 113, 113, 0.9), 0 0 20px rgba(248, 113, 113, 0.6);
-}
-
   </style>
-
-
 </head>
 <body>
   <div class="board-container">
@@ -339,10 +331,10 @@
           </tr>
         </thead>
         <tbody id="event-body">
-          <!-- Rows injected by JavaScript -->
+          <!-- rows injected by JS -->
         </tbody>
       </table>
-      <div id="empty-state" class="empty-state" style="display: none;">
+      <div id="empty-state" class="empty-state" style="display:none;">
         <div>No active upcoming events found.</div>
         <div style="font-size:12px; opacity:0.8;">
           Make sure <strong>Active?</strong> is ticked and <strong>Start_ISO</strong> is populated in your sheet.
@@ -361,29 +353,24 @@
   <script>
     // === CONFIG ===
     const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSCiM892-0C52EcEXQ4rcNk2yADPStNOaf1zpf85leSMdTpXFaI9Hopj8kOEREO8mZEAYYvqSQsN3Ir/pub?gid=0&single=true&output=csv";
-    const REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
-    const COUNTDOWN_UPDATE_MS = 1000; // 1 second
-    const MAX_PAST_AGE_HOURS = 2; // hide events finished more than 2h ago
+    const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+    const COUNTDOWN_UPDATE_MS = 1000;
+    const MAX_PAST_AGE_HOURS = 2;
 
     let events = [];
     let countdownTimer = null;
 
     function updateClock() {
       const now = new Date();
-      const pad = (n) => n.toString().padStart(2, '0');
-      const dateStr = [
-        now.getFullYear(),
-        pad(now.getMonth() + 1),
-        pad(now.getDate())
-      ].join("-");
+      const pad = (n) => n.toString().padStart(2, "0");
+      const dateStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
       const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
       document.getElementById("clock").textContent = `${dateStr} ${timeStr}`;
     }
-
     setInterval(updateClock, 1000);
     updateClock();
 
-    // --- CSV parsing ---
+    // CSV parser (handles quotes)
     function parseCSV(text) {
       const rows = [];
       let row = [];
@@ -417,6 +404,7 @@
           current += char;
         }
       }
+
       if (current !== "" || row.length > 0) {
         row.push(current);
         rows.push(row);
@@ -444,7 +432,7 @@
         .filter(row => row.some(cell => cell && cell.trim() !== ""))
         .map(row => {
           const title = get(row, "Title");
-          if (!title) return null; // skip empty titles
+          if (!title) return null;
 
           const category = get(row, "Category");
           const location = get(row, "Location");
@@ -454,23 +442,18 @@
           const priority = get(row, "Priority");
           const active = (get(row, "Active?") || "").toUpperCase() === "TRUE";
 
-          // fallback if Start_ISO is empty: combine Start Date + Start Time
           let startCombined = startIso;
           if (!startCombined) {
-            const startDate = get(row, "Start Date");
-            const startTime = get(row, "Start Time");
-            if (startDate && startTime) {
-              startCombined = `${startDate} ${startTime}`;
-            }
+            const sd = get(row, "Start Date");
+            const st = get(row, "Start Time");
+            if (sd && st) startCombined = `${sd} ${st}`;
           }
 
           let endCombined = endIso;
           if (!endCombined) {
-            const endDate = get(row, "End Date");
-            const endTime = get(row, "End Time");
-            if (endDate && endTime) {
-              endCombined = `${endDate} ${endTime}`;
-            }
+            const ed = get(row, "End Date");
+            const et = get(row, "End Time");
+            if (ed && et) endCombined = `${ed} ${et}`;
           }
 
           return {
@@ -492,22 +475,12 @@
     function parseLocalDateTime(dtStr) {
       if (!dtStr) return null;
 
-      // Try ISO "yyyy-MM-dd HH:mm" first
       const isoMatch = dtStr.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
       if (isoMatch) {
         const [_, y, m, d, hh, mm] = isoMatch;
-        return new Date(
-          Number(y),
-          Number(m) - 1,
-          Number(d),
-          Number(hh),
-          Number(mm),
-          0,
-          0
-        );
+        return new Date(Number(y), Number(m) - 1, Number(d), Number(hh), Number(mm), 0, 0);
       }
 
-      // Fallback: let browser try
       const parsed = new Date(dtStr);
       if (!isNaN(parsed.getTime())) return parsed;
 
@@ -516,7 +489,7 @@
 
     function formatDisplayStart(dt, allDay) {
       if (!dt) return "—";
-      const pad = (n) => n.toString().padStart(2, '0');
+      const pad = (n) => n.toString().padStart(2, "0");
       const date = `${pad(dt.getDate())}/${pad(dt.getMonth() + 1)}/${dt.getFullYear().toString().slice(-2)}`;
       const time = `${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
       return allDay ? `${date} (all day)` : `${date} ${time}`;
@@ -524,50 +497,36 @@
 
     function computeStatus(now, start, end) {
       if (!start) return { status: "UNKNOWN", code: "past" };
-
       const diffStart = start.getTime() - now.getTime();
-      const withinStart = Math.abs(diffStart) <= 10 * 60 * 1000; // 10 min window
+      const withinStart = Math.abs(diffStart) <= 10 * 60 * 1000;
       const diffEnd = end ? end.getTime() - now.getTime() : null;
 
-      if (diffStart > 0) {
-        return { status: "UPCOMING", code: "upcoming" };
-      }
-
-      if (withinStart) {
-        return { status: "NOW", code: "now" };
-      }
-
+      if (diffStart > 0) return { status: "UPCOMING", code: "upcoming" };
+      if (withinStart) return { status: "NOW", code: "now" };
       if (diffStart <= 0 && diffEnd !== null && diffEnd > 0) {
         return { status: "ONGOING", code: "ongoing" };
-      }
-
-      // past
-      if (diffEnd !== null) {
-        return { status: "PAST", code: "past" };
       }
       return { status: "PAST", code: "past" };
     }
 
-   function formatCountdown(diffMs) {
-  if (diffMs <= 0) {
-    return "00h 00m 00s";
-  }
+    // ALWAYS show seconds, with days if needed
+    function formatCountdown(diffMs) {
+      if (diffMs <= 0) {
+        return "00h 00m 00s";
+      }
 
-  const totalSeconds = Math.floor(diffMs / 1000);
-  const days = Math.floor(totalSeconds / 86400); // 24 * 3600
-  const hours = Math.floor((totalSeconds % 86400) / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
+      const totalSeconds = Math.floor(diffMs / 1000);
+      const days = Math.floor(totalSeconds / 86400);
+      const hours = Math.floor((totalSeconds % 86400) / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      const pad = (n) => n.toString().padStart(2, "0");
 
-  const pad = (n) => n.toString().padStart(2, '0');
-
-  // Always show seconds — even when days > 0
-  if (days > 0) {
-    return `${days}d ${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`;
-  }
-  return `${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`;
-}
-
+      if (days > 0) {
+        return `${days}d ${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`;
+      }
+      return `${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`;
+    }
 
     function categoryBadgeClass(category) {
       if (!category) return "";
@@ -599,9 +558,8 @@
       if (!events.length) {
         emptyState.style.display = "flex";
         return;
-      } else {
-        emptyState.style.display = "none";
       }
+      emptyState.style.display = "none";
 
       const now = new Date();
 
@@ -613,9 +571,7 @@
           const status = computeStatus(now, start, end);
 
           let sortTime = start ? start.getTime() : Infinity;
-          if (status.code === "ongoing" && end) {
-            sortTime = end.getTime();
-          }
+          if (status.code === "ongoing" && end) sortTime = end.getTime();
 
           let ageOk = true;
           if (status.code === "past" && end) {
@@ -624,24 +580,17 @@
             if (ageMs > maxAgeMs) ageOk = false;
           }
 
-          return {
-            ...e,
-            start,
-            end,
-            status,
-            sortTime,
-            ageOk
-          };
+          return { ...e, start, end, status, sortTime, ageOk };
         })
-        .filter(e => e.ageOk && e.start) // must have a valid start and not too old
+        .filter(e => e.ageOk && e.start)
         .sort((a, b) => a.sortTime - b.sortTime);
 
       if (!enriched.length) {
         emptyState.style.display = "flex";
         return;
-      } else {
-        emptyState.style.display = "none";
       }
+
+      emptyState.style.display = "none";
 
       enriched.forEach((e, index) => {
         const tr = document.createElement("tr");
@@ -650,14 +599,15 @@
         const titleTd = document.createElement("td");
         titleTd.className = "col-title";
         const prDot = document.createElement("span");
+        const priorityLower = (e.priority || "").toLowerCase();
         prDot.className = "priority-dot " + (
-          e.priority && e.priority.toLowerCase() === "high" ? "priority-high" :
-          e.priority && e.priority.toLowerCase() === "medium" ? "priority-medium" :
+          priorityLower === "high" ? "priority-high" :
+          priorityLower === "medium" ? "priority-medium" :
           "priority-low"
         );
-        titleTd.appendChild(prDot);
         const titleSpan = document.createElement("span");
         titleSpan.textContent = e.title;
+        titleTd.appendChild(prDot);
         titleTd.appendChild(titleSpan);
 
         const locationTd = document.createElement("td");
@@ -676,10 +626,10 @@
         startTd.textContent = formatDisplayStart(e.start, e.allDay);
 
         const countdownTd = document.createElement("td");
-        countdownTd.className = "col-countdown small-mono";
-        countdownTd.dataset.start = e.start.getTime();
-        countdownTd.dataset.statusCode = e.status.code;
+        countdownTd.className = "col-countdown small-mono countdown-cell";
         countdownTd.dataset.index = index;
+        countdownTd.dataset.start = e.start.getTime();
+        countdownTd.dataset.end = e.end ? e.end.getTime() : "";
 
         const statusTd = document.createElement("td");
         statusTd.className = "col-status";
@@ -710,14 +660,31 @@
       const now = new Date();
       const tbody = document.getElementById("event-body");
 
-      Array.from(tbody.querySelectorAll(".col-countdown")).forEach(td => {
+      Array.from(tbody.querySelectorAll(".countdown-cell")).forEach(td => {
         const index = Number(td.dataset.index);
         const event = enriched[index];
         if (!event || !event.start) return;
 
+        // clear urgency classes
+        td.classList.remove("countdown-soon", "countdown-urgent", "countdown-critical");
+
         const diffStart = event.start.getTime() - now.getTime();
         const status = computeStatus(now, event.start, event.end);
-        td.textContent = status.code === "upcoming" ? formatCountdown(diffStart) : "—";
+
+        if (status.code === "upcoming") {
+          td.textContent = formatCountdown(diffStart);
+
+          const totalSeconds = Math.floor(diffStart / 1000);
+          if (totalSeconds <= 60) {
+            td.classList.add("countdown-critical");
+          } else if (totalSeconds <= 600) {
+            td.classList.add("countdown-urgent");
+          } else if (totalSeconds <= 3600) {
+            td.classList.add("countdown-soon");
+          }
+        } else {
+          td.textContent = "—";
+        }
 
         const statusSpan = tbody.querySelector(`.status-pill[data-index="${index}"]`);
         if (statusSpan) {
@@ -734,22 +701,19 @@
 
       try {
         const response = await fetch(CSV_URL + "&cacheBust=" + Date.now());
-        if (!response.ok) {
-          throw new Error("HTTP " + response.status);
-        }
+        if (!response.ok) throw new Error("HTTP " + response.status);
+
         const text = await response.text();
         const rows = parseCSV(text);
-        const objs = mapRowsToObjects(rows);
-        events = objs;
+        events = mapRowsToObjects(rows);
 
         renderEvents();
 
-        const now = new Date();
-        document.getElementById("last-updated").textContent = now.toLocaleString();
+        document.getElementById("last-updated").textContent = new Date().toLocaleString();
       } catch (err) {
         console.error("Error fetching/processing CSV:", err);
         errorEl.style.display = "block";
-        errorEl.textContent = "Error loading events from Google Sheets. Check your internet connection or CSV link.";
+        errorEl.textContent = "Error loading events from Google Sheets: " + err.message;
       }
     }
 
@@ -758,9 +722,3 @@
   </script>
 </body>
 </html>
-
-
-
-
-
-
