@@ -141,7 +141,7 @@
    .col-countdown {
   width: 18%;
   font-weight: 900;
-  font-size: 22px;
+  font-size: 20px;
   text-align: right;
   letter-spacing: 0.03em;
   color: #fefce8; /* soft warm airport-yellow */
@@ -288,6 +288,27 @@
         font-size: 11px;
       }
     }
+
+        /* Under 1 hour = yellow */
+.countdown-soon {
+  color: #fde047; /* bright warm yellow */
+  font-weight: 900;
+}
+
+/* Under 10 minutes = orange */
+.countdown-urgent {
+  color: #fb923c;
+  font-weight: 900;
+  text-shadow: 0 0 8px rgba(251, 146, 60, 0.8);
+}
+
+/* Under 1 minute = red + glow */
+.countdown-critical {
+  color: #f87171;
+  font-weight: 900;
+  text-shadow: 0 0 12px rgba(248, 113, 113, 0.9), 0 0 20px rgba(248, 113, 113, 0.6);
+}
+
   </style>
 
 
@@ -737,6 +758,7 @@
   </script>
 </body>
 </html>
+
 
 
 
