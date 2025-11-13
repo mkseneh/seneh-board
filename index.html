@@ -284,6 +284,7 @@
       background: #111827;
     }
 
+       /* Tablets / small laptops */
     @media (max-width: 900px) {
       .board-container {
         padding: 10px;
@@ -300,9 +301,52 @@
         font-size: 11px;
       }
       .col-countdown {
-        font-size: 16px;
+        font-size: 18px;
       }
     }
+
+    /* Phones (iPhone etc.) */
+    @media (max-width: 600px) {
+      .board-container {
+        padding: 8px;
+      }
+
+      .board-title {
+        font-size: 16px;
+        letter-spacing: 0.12em;
+      }
+
+      .board-subtitle {
+        display: none; /* hide subtitle on tiny screens */
+      }
+
+      th, td {
+        padding: 4px 4px;
+        font-size: 10px;
+      }
+
+      /* Hide less important columns */
+      .col-location,
+      .col-category {
+        display: none;
+      }
+
+      /* Adjust widths when some columns are hidden */
+      .col-title {
+        width: 42%;
+      }
+
+      .col-start {
+        width: 28%;
+      }
+
+      .col-countdown {
+        width: 30%;
+        font-size: 16px;
+        text-align: right;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -722,3 +766,4 @@
   </script>
 </body>
 </html>
+
