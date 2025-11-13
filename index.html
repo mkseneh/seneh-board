@@ -305,47 +305,54 @@
       }
     }
 
-    /* Phones (iPhone etc.) */
-    @media (max-width: 600px) {
-      .board-container {
-        padding: 8px;
-      }
+   /* Phones (iPhone etc.) — super minimal mode */
+@media (max-width: 600px) {
+  .board-container {
+    padding: 8px;
+  }
 
-      .board-title {
-        font-size: 16px;
-        letter-spacing: 0.12em;
-      }
+  .board-title {
+    font-size: 16px;
+    letter-spacing: 0.12em;
+  }
 
-      .board-subtitle {
-        display: none; /* hide subtitle on tiny screens */
-      }
+  .board-subtitle {
+    display: none; /* hide subtitle on tiny screens */
+  }
 
-      th, td {
-        padding: 4px 4px;
-        font-size: 10px;
-      }
+  th, td {
+    padding: 5px 4px;
+    font-size: 11px;
+  }
 
-      /* Hide less important columns */
-      .col-location,
-      .col-category {
-        display: none;
-      }
+  /* Hide ALL except Event, Start, Countdown */
+  .col-location,
+  .col-category,
+  .col-status {
+    display: none;
+  }
 
-      /* Adjust widths when some columns are hidden */
-      .col-title {
-        width: 42%;
-      }
+  /* Resize remaining columns */
+  .col-title {
+    width: 45%;
+  }
 
-      .col-start {
-        width: 28%;
-      }
+  .col-start {
+    width: 25%;
+  }
 
-      .col-countdown {
-        width: 30%;
-        font-size: 16px;
-        text-align: right;
-      }
-    }
+  .col-countdown {
+    width: 30%;
+    font-size: 18px;
+    text-align: right;
+  }
+
+  /* Status pills can fully vanish */
+  .status-pill {
+    display: none !important;
+  }
+}
+
 
   </style>
 </head>
@@ -766,4 +773,5 @@
   </script>
 </body>
 </html>
+
 
