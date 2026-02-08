@@ -22,9 +22,12 @@ automatically switches to a minimal mode on mobile.
 
 ## How to run locally
 
-1. Open `index.html` in a browser.
+Because this page fetches CSV data using `fetch()`, some browsers block it when
+opening the file directly (`file://`). Run a small local web server instead.
 
-For live data, set the CSV URL in the config section:
+### Option A (recommended): Python built-in server
 
-```js
-const CSV_URL = "YOUR_CSV_URL_HERE";
+From the project folder:
+
+```bash
+python3 -m http.server 8000
