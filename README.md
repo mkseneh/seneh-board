@@ -16,7 +16,7 @@ automatically switches to a minimal mode on mobile.
 
 - HTML/CSS layout and responsive design
 - Clean, readable JavaScript (no frameworks)
-- Data fetching + client-side parsing
+- Data fetching and client-side parsing
 - DOM rendering and periodic updates
 - Practical UI/UX decisions (minimal mobile mode, status badges)
 
